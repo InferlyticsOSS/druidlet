@@ -58,52 +58,6 @@ public class CSVLoader extends Loader {
             this.bufferedReader = new BufferedReader(reader);
         }
 
-        protected Long getTimestamp(Map<String, Object> map) {
-            if (timestampDimension == null) {
-                return 1L;
-            } else {
-                return Long.valueOf((String) map.get(timestampDimension));
-            }
-        }
-
-        public boolean hasNext() {
-            try {
-                if (nextLine == null && (nextLine = bufferedReader.readLine()) == null) {
-                    close();
-                    return false;
-                } else {
-                    return true;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                close();
-                return false;
-            }
-        }
-
-        public InputRow next() {
-            if (!hasNext()) {
-                return null;
-            }
-            Map<String, Object> map = parse(nextLine);
-            nextLine = null;
-            if (map == null) {
-                return next();
-            }
-            return new MapBasedInputRow(getTimestamp(map), dimensions, map);
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        public void close() {
-            try {
-                bufferedReader.close();
-            } catch (IOException e) {
-            }
-        }
-
         private Map<String, Object> parse(String row) {
             List<String> data = new ArrayList<>();
             // Faster than String.split()
@@ -121,6 +75,55 @@ public class CSVLoader extends Loader {
                 }
             }
             return map;
+        }
+
+        private Long getTimestamp(Map<String, Object> map) {
+            if (timestampDimension == null) {
+                return 1L;
+            } else {
+                return Long.valueOf((String) map.get(timestampDimension));
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            try {
+                if (nextLine == null && (nextLine = bufferedReader.readLine()) == null) {
+                    close();
+                    return false;
+                } else {
+                    return true;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                close();
+                return false;
+            }
+        }
+
+        @Override
+        public InputRow next() {
+            if (!hasNext()) {
+                return null;
+            }
+            Map<String, Object> map = parse(nextLine);
+            nextLine = null;
+            if (map == null) {
+                return next();
+            }
+            return new MapBasedInputRow(getTimestamp(map), dimensions, map);
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        public void close() {
+            try {
+                bufferedReader.close();
+            } catch (IOException e) {
+            }
         }
     }
 }
