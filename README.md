@@ -49,11 +49,51 @@ This should generate the `druidlet-0.1.0.jar` in your `./target` folder.
 
 ####Indexing from CSV
 
-Documentation coming soon...
+`QueryableIndex` objects can be queried using the `QueryExecutor.run()` method. The `QueryableIndex` can be built as follows:
+
+    Reader reader = new FileReader(new File("/path/to/file/file.csv"));
+
+    List<String> columns = Arrays.asList("dim1", "dim2", "ts", "metric", "value", "count", "min", "max", "sum");
+    List<String> metrics = Arrays.asList("value", "count", "min", "max", "sum");
+    List<String> dimensions = new ArrayList<>(columns);
+    dimensions.removeAll(metrics);
+    Loader loader = Loader.csv(reader, columns, dimensions, "ts");
+
+    DimensionsSpec dimensionsSpec = new DimensionsSpec(dimensions, null, null);
+    AggregatorFactory[] metricsAgg = new AggregatorFactory[]{
+            new LongSumAggregatorFactory("agg_count", "count"),
+            new DoubleMaxAggregatorFactory("agg_max", "max"),
+            new DoubleMinAggregatorFactory("agg_min", "min"),
+            new DoubleSumAggregatorFactory("agg_sum", "sum")
+    };
+    IncrementalIndexSchema indexSchema = new IncrementalIndexSchema(0, QueryGranularity.ALL, dimensionsSpec, metricsAgg);
+    DruidIndices.getInstance().cache(indexKey, loader, indexSchema);
+
+The call to `DruidIndices.getInstance().cache(...)` builds the index and caches it with the key specified by the `indexKey`, which can be any String.
 
 ####Querying through Code
 
-Documentation coming soon...
+Indexes can be obtained using `DruidIndices.getInstance().get(indexKey)`. They can be queried as follows:
+    
+    List<DimFilter> filters = new ArrayList<DimFilter>();
+    filters.add(DimFilters.dimEquals("report", "URLTransaction"));
+    filters.add(DimFilters.dimEquals("pool", "r1cart"));
+    filters.add(DimFilters.dimEquals("metric", "Duration"));
+    Query query = GroupByQuery.builder()
+        .setDataSource("test")
+        .setQuerySegmentSpec(QuerySegmentSpecs.create(new Interval(0, new DateTime().getMillis())))
+        .setGranularity(QueryGranularity.NONE)
+        .addDimension("dim1")
+        .addAggregator(new LongSumAggregatorFactory("agg_count", "agg_count"))
+        .addAggregator(new DoubleMaxAggregatorFactory("agg_max", "agg_max"))
+        .addAggregator(new DoubleMinAggregatorFactory("agg_min", "agg_min"))
+        .addAggregator(new DoubleSumAggregatorFactory("agg_sum", "agg_sum"))
+        .setDimFilter(DimFilters.and(filters))
+        .build();
+
+    Sequence<Row> sequence = QueryExecutor.run(query, index);
+
+The result is contained in the `Sequence`.
 
 ####Querying via HTTP
 
@@ -61,7 +101,7 @@ First off, you need to start **druidlet** from the `DruidRunner` class:
 
     new DruidRunner(37843, index).run();
 
-Here the first parameter is the `PORT` you want **druidlet** to listen on. The second parameter is the `QueryableIndex` you want to be able to query.
+Here the first parameter is the `PORT` you want **druidlet** to listen on. The second parameter is the `QueryableIndex` you want to be able to query, created as mentioned in the `Indexing from CSV` section.
 
 Once **druidlet** is running, you can query it via REST calls:
 
