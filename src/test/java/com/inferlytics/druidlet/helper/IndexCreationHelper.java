@@ -41,7 +41,7 @@ public class IndexCreationHelper {
         List<String> metrics = Arrays.asList("value", "count", "min", "max", "sum");
         List<String> dimensions = new ArrayList<>(columns);
         dimensions.removeAll(metrics);
-        Loader loader = new CSVLoader(reader, columns, dimensions, "TS");
+        Loader loader = Loader.csv(reader, columns, dimensions, "TS");
 
         DimensionsSpec dimensionsSpec = new DimensionsSpec(dimensions, null, null);
         AggregatorFactory[] metricsAgg = new AggregatorFactory[]{

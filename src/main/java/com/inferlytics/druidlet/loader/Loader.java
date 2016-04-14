@@ -7,8 +7,10 @@
 
 package com.inferlytics.druidlet.loader;
 
+import com.inferlytics.druidlet.loader.impl.CSVLoader;
 import io.druid.data.input.InputRow;
 
+import java.io.Reader;
 import java.util.List;
 
 /**
@@ -22,5 +24,18 @@ public abstract class Loader implements Iterable<InputRow> {
     public Loader(List<String> dims, String ts) {
         this.dimensions = dims;
         this.timestampDimension = ts;
+    }
+
+    /**
+     * CSVLoader implementation of the Loader
+     *
+     * @param reader             A Reader opened to the CSV file
+     * @param columns            List of columns in the CSV
+     * @param dimensions         List of dimensions to index
+     * @param timestampDimension Timestamp dimension
+     * @return A new CSVLoader to the CSV file specified by the reader
+     */
+    public static Loader csv(Reader reader, List<String> columns, List<String> dimensions, String timestampDimension) {
+        return new CSVLoader(reader, columns, dimensions, timestampDimension);
     }
 }
