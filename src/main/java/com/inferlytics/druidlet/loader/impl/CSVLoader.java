@@ -17,119 +17,110 @@ import java.io.Reader;
 import java.util.*;
 
 /**
- * This is CSV loader implementation where data are comma separated.
- * If column name is "value", then it is assuming containing metric value and will be converted as float.
- * For specifying any metric name, metric column should be present in each record.
- * Ex : For say wikipedia schema, having dimensions
- * "Timestamp, Page, Username, Gender, City"
- * and for Metric "CharsAdded" with value, CSV file can look like
- * 1234,JB,Abc,Male,SF,CharsAdded,1290
- * 1235,JB,Xyz,Female,SJ,CharsAdded,3421
- * where data in format "Timestamp, Page, Username, Gender, City, metric, value"
+ * Reads CSV files with the given column headers, generates InputRow
+ * objects with the given dimensions and timestampDimension
  */
 public class CSVLoader extends Loader {
+    private final Iterator<InputRow> iterator;
 
-	protected Reader reader;
-	
-	/**
-	 * @param reader Reader object pointing to CSV file
-	 * @param columns List of all columns in CSV file (including metric and "value" column)
-	 * @param dimensions List of dimensions (Excluding metric and value columns)
-	 * @param timestampDimension Dimension which indicates timestamp field in CSV File.
-	 */
-	public CSVLoader(Reader reader, List<String> columns, List<String> dimensions, String timestampDimension) {
-		super(columns, dimensions, timestampDimension);
-		this.reader = reader;
-	}
-	
-	@Override
-	public Iterator<InputRow> iterator() {
-		return new CSVReaderIterator();
-	}
 
-	protected Map<String, Object> parse(String row) {
-		List<String> data = new ArrayList<>();
-		StringTokenizer stk = new StringTokenizer(row, ",");
-		while(stk.hasMoreTokens()) {
-			data.add(stk.nextToken());
-		}
-	    Map<String, Object> map = new HashMap<>();
-	    if(data.size() != columns.size()) {
-	    	return null;
-	    }
-	    for (int i = 0; i < columns.size(); i++) {
-	    	if (!data.get(i).equals("null") && !data.get(i).isEmpty()) {
-//	    		//Column name "value" is treated as special column containing value of metric
-//	    		if (columns.get(i).equals("value")) {
-//	    			map.put(columns.get(i), Float.parseFloat(data.get(i)));
-//	    		} else {
-	    			map.put(columns.get(i), data.get(i));
-//	    		}
-	    	}
-	    }
-	    return map;
-	}
-	
-	private class CSVReaderIterator implements Iterator<InputRow> {
-		String nextLine;
-		protected BufferedReader bufferedReader;
-	    	
-	    public CSVReaderIterator() {
-	      this.bufferedReader = new BufferedReader(reader);
-	    }
+    /**
+     * @param reader             Reader object pointing to CSV file
+     * @param columns            List of all columns in CSV file (including metric and "value" column)
+     * @param dimensions         List of dimensions (Excluding metric and value columns)
+     * @param timestampDimension Dimension which indicates timestamp field in CSV File.
+     */
+    public CSVLoader(Reader reader, List<String> columns, List<String> dimensions, String timestampDimension) {
+        super(dimensions, timestampDimension);
+        this.iterator = new CSVReaderIterator(reader, columns, dimensions, timestampDimension);
+    }
 
-	    protected Long getTimestamp(Map<String, Object> map) {
-	    	if (timestampDimension == null) {
-	    		return 1L;
-	    	} else {
-	    		return Long.valueOf((String)map.get(timestampDimension));
-	    	}
-	    }
+    @Override
+    public Iterator<InputRow> iterator() {
+        return iterator;
+    }
 
-	    public boolean hasNext() {
-	    	try {
-	    		if (nextLine == null && (nextLine = bufferedReader.readLine()) == null) {
-	    			close();
-	    			return false;
-	    		} else {
-	    			return true;
-	    		}
-	    	} catch (IOException e) {
-	    		e.printStackTrace();
-	    		close();
-	    		return false;
-	    	}
-	    }
+    private class CSVReaderIterator implements Iterator<InputRow> {
+        private final List<String> columns;
+        private final List<String> dimensions;
+        private final String timestampDimension;
+        private final BufferedReader bufferedReader;
+        private String nextLine;
 
-	    public InputRow next() {
-	    	if (nextLine == null) {
-	    		try {
-	    			nextLine = bufferedReader.readLine();
-	    		} catch (IOException e) {
-	    			e.printStackTrace();
-	    			close();
-	    			return null;
-	    		}
-	    	}
-	    	Map<String, Object> map = parse(nextLine);
-	    	if(map == null) {
-		    	nextLine = null;
-	    		next();
-	    	}
-	    	InputRow row = new MapBasedInputRow(getTimestamp(map), dimensions, map);
-	    	nextLine = null;
-	    	return row;
-	    }
+        public CSVReaderIterator(
+                final Reader reader,
+                final List<String> columns,
+                final List<String> dimensions,
+                final String timestampDimension) {
+            this.columns = columns;
+            this.dimensions = dimensions;
+            this.timestampDimension = timestampDimension;
+            this.bufferedReader = new BufferedReader(reader);
+        }
 
-	    public void remove() {
-	      throw new UnsupportedOperationException();
-	    }
-	    
-	    public void close() {
-	    	try {
-	    		bufferedReader.close();
-	    	} catch(IOException e) {
-	    	}
-	    }
-	}
+        protected Long getTimestamp(Map<String, Object> map) {
+            if (timestampDimension == null) {
+                return 1L;
+            } else {
+                return Long.valueOf((String) map.get(timestampDimension));
+            }
+        }
+
+        public boolean hasNext() {
+            try {
+                if (nextLine == null && (nextLine = bufferedReader.readLine()) == null) {
+                    close();
+                    return false;
+                } else {
+                    return true;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                close();
+                return false;
+            }
+        }
+
+        public InputRow next() {
+            if (!hasNext()) {
+                return null;
+            }
+            Map<String, Object> map = parse(nextLine);
+            nextLine = null;
+            if (map == null) {
+                return next();
+            }
+            return new MapBasedInputRow(getTimestamp(map), dimensions, map);
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        public void close() {
+            try {
+                bufferedReader.close();
+            } catch (IOException e) {
+            }
+        }
+
+        private Map<String, Object> parse(String row) {
+            List<String> data = new ArrayList<>();
+            // Faster than String.split()
+            StringTokenizer stk = new StringTokenizer(row, ",");
+            while (stk.hasMoreTokens()) {
+                data.add(stk.nextToken());
+            }
+            Map<String, Object> map = new HashMap<>();
+            if (data.size() != columns.size()) {
+                return null;
+            }
+            for (int i = 0; i < columns.size(); i++) {
+                if (!data.get(i).equals("null") && !data.get(i).isEmpty()) {
+                    map.put(columns.get(i), data.get(i));
+                }
+            }
+            return map;
+        }
+    }
 }
