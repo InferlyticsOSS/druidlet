@@ -34,10 +34,10 @@ import java.util.List;
  */
 public class DruidClient {
     private interface Druid {
-        @POST("/")
+        @POST("v2")
         Call<List<Result>> topN(@Body Query query);
 
-        @POST("/")
+        @POST("v2")
         Call<List<Row>> groupBy(@Body Query query);
     }
 

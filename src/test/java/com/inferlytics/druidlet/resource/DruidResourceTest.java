@@ -37,7 +37,7 @@ public class DruidResourceTest {
 
     static {
         PORT = 2000 + new Random().nextInt(60000);
-        client = new DruidClient("http://localhost:" + PORT + "/druid/v2");
+        client = new DruidClient("http://localhost:" + PORT + "/druid/");
         try {
             druidRunner = new DruidRunner(PORT, IndexCreationHelper.getIndex(String.valueOf(PORT)));
         } catch (IOException e) {
