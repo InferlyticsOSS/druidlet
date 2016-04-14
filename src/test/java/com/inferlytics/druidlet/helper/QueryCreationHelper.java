@@ -9,10 +9,10 @@ package com.inferlytics.druidlet.helper;
 
 import io.druid.granularity.QueryGranularity;
 import io.druid.query.Query;
-import io.druid.query.aggregation.*;
-import io.druid.query.aggregation.histogram.ApproximateHistogramFoldingAggregatorFactory;
-import io.druid.query.aggregation.histogram.QuantilePostAggregator;
-import io.druid.query.aggregation.histogram.QuantilesPostAggregator;
+import io.druid.query.aggregation.DoubleMaxAggregatorFactory;
+import io.druid.query.aggregation.DoubleMinAggregatorFactory;
+import io.druid.query.aggregation.DoubleSumAggregatorFactory;
+import io.druid.query.aggregation.LongSumAggregatorFactory;
 import io.druid.query.filter.DimFilter;
 import io.druid.query.filter.DimFilters;
 import io.druid.query.groupby.GroupByQuery;
@@ -46,7 +46,6 @@ public class QueryCreationHelper {
                 .addAggregator(new DoubleMaxAggregatorFactory("agg_max", "agg_max"))
                 .addAggregator(new DoubleMinAggregatorFactory("agg_min", "agg_min"))
                 .addAggregator(new DoubleSumAggregatorFactory("agg_sum", "agg_sum"))
-                .addPostAggregator(new QuantilesPostAggregator("agg_quantiles", "agg_histogram", new float[]{0.25f, 0.5f, 0.75f, 0.95f, 0.99f}))
                 .setDimFilter(DimFilters.and(filters))
                 .build();
     }
@@ -69,8 +68,6 @@ public class QueryCreationHelper {
                                 new DoubleMaxAggregatorFactory("agg_max", "agg_max"),
                                 new DoubleMinAggregatorFactory("agg_min", "agg_min"),
                                 new DoubleSumAggregatorFactory("agg_sum", "agg_sum")))
-                .postAggregators(
-                        Arrays.<PostAggregator>asList(new QuantilePostAggregator("agg_quantiles", "agg_histogram", 0.5f)))
                 .filters(DimFilters.and(filters)).build();
     }
 }

@@ -10,7 +10,7 @@ package com.inferlytics.druidlet.util;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.inferlytics.druidlet.jackson.QueryObjectMapper;
+import io.druid.jackson.DefaultObjectMapper;
 import io.druid.query.Query;
 
 import java.io.IOException;
@@ -24,7 +24,7 @@ import java.io.InputStream;
  */
 public class Utils {
     // Mapper to be used everywhere
-    public static final ObjectMapper JSON_MAPPER = new QueryObjectMapper();
+    public static final ObjectMapper JSON_MAPPER = new DefaultObjectMapper();
 
 
     /**

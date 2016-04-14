@@ -7,8 +7,8 @@
 
 package com.inferlytics.druidlet.core;
 
-import com.inferlytics.druidlet.jackson.QueryObjectMapper;
 import io.druid.data.input.InputRow;
+import io.druid.jackson.DefaultObjectMapper;
 import io.druid.segment.IndexIO;
 import io.druid.segment.IndexMerger;
 import io.druid.segment.IndexSpec;
@@ -66,13 +66,13 @@ public class DruidIndices {
             tmpDir = System.getProperty("java.io.tmpdir") + File.separator + "druid-tmp-index-";
         }
         File tmpIndexDir = new File(tmpDir + loader.hashCode());
-        IndexIO indexIO = new IndexIO(new QueryObjectMapper(), new ColumnConfig() {
+        IndexIO indexIO = new IndexIO(new DefaultObjectMapper(), new ColumnConfig() {
             @Override
             public int columnCacheSizeBytes() {
                 return 0;
             }
         });
-        new IndexMerger(new QueryObjectMapper(), indexIO).persist(incIndex, tmpIndexDir, new IndexSpec());
+        new IndexMerger(new DefaultObjectMapper(), indexIO).persist(incIndex, tmpIndexDir, new IndexSpec());
         this.indexMap.put(indexKey, indexIO.loadIndex(tmpIndexDir));
     }
 

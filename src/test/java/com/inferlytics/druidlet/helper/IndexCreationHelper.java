@@ -13,7 +13,6 @@ import com.inferlytics.druidlet.loader.impl.CSVLoader;
 import io.druid.data.input.impl.DimensionsSpec;
 import io.druid.granularity.QueryGranularity;
 import io.druid.query.aggregation.*;
-import io.druid.query.aggregation.histogram.ApproximateHistogramAggregatorFactory;
 import io.druid.segment.QueryableIndex;
 import io.druid.segment.incremental.IncrementalIndexSchema;
 

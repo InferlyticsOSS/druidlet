@@ -116,11 +116,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>io.druid.extensions</groupId>
-            <artifactId>druid-histogram</artifactId>
-            <version>${druid-version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>${jetty-version}</version>
