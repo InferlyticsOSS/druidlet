@@ -35,13 +35,11 @@ public class IndexCreationHelper {
             return indices.get(indexKey);
         }
         //  Create druid segments from raw data
-        Reader reader = new BufferedReader(new FileReader(new File("./src/test/resources/report.csv")));
+        Reader reader = new FileReader(new File("./src/test/resources/report.csv"));
 
         List<String> columns = Arrays.asList("colo", "pool", "report", "URL", "TS", "metric", "value", "count", "min", "max", "sum");
-        List<String> exclusions = Arrays.asList("_Timestamp", "_Machine", "_ThreadId", "_Query");
         List<String> metrics = Arrays.asList("value", "count", "min", "max", "sum");
         List<String> dimensions = new ArrayList<>(columns);
-        dimensions.removeAll(exclusions);
         dimensions.removeAll(metrics);
         Loader loader = new CSVLoader(reader, columns, dimensions, "TS");
 

@@ -32,10 +32,10 @@ public class CSVLoader extends Loader {
 	protected Reader reader;
 	
 	/**
-	 * @param reader : Reader object pointing to CSV file
-	 * @param columns : List of all columns in CSV file (including metric and "value" column)
-	 * @param dimensions : List of dimensions (Excluding metric and value columns)
-	 * @param timestampDimension : Dimension which indicates timestamp field in CSV File.
+	 * @param reader Reader object pointing to CSV file
+	 * @param columns List of all columns in CSV file (including metric and "value" column)
+	 * @param dimensions List of dimensions (Excluding metric and value columns)
+	 * @param timestampDimension Dimension which indicates timestamp field in CSV File.
 	 */
 	public CSVLoader(Reader reader, List<String> columns, List<String> dimensions, String timestampDimension) {
 		super(columns, dimensions, timestampDimension);
@@ -48,25 +48,23 @@ public class CSVLoader extends Loader {
 	}
 
 	protected Map<String, Object> parse(String row) {
-		List<String> data = new ArrayList<String>();
+		List<String> data = new ArrayList<>();
 		StringTokenizer stk = new StringTokenizer(row, ",");
 		while(stk.hasMoreTokens()) {
 			data.add(stk.nextToken());
 		}
-	    Map<String, Object> map = new HashMap<String, Object>();
+	    Map<String, Object> map = new HashMap<>();
 	    if(data.size() != columns.size()) {
 	    	return null;
 	    }
 	    for (int i = 0; i < columns.size(); i++) {
-	    	if (data.get(i).equals("null") || data.get(i).isEmpty()) {
-	    		continue;
-	    	} else {
-	    		//Column name "value" is treated as special column containing value of metric
-	    		if (columns.get(i).equals("value")) {
-	    			map.put(columns.get(i), Float.parseFloat(data.get(i)));
-	    		} else {
+	    	if (!data.get(i).equals("null") && !data.get(i).isEmpty()) {
+//	    		//Column name "value" is treated as special column containing value of metric
+//	    		if (columns.get(i).equals("value")) {
+//	    			map.put(columns.get(i), Float.parseFloat(data.get(i)));
+//	    		} else {
 	    			map.put(columns.get(i), data.get(i));
-	    		}
+//	    		}
 	    	}
 	    }
 	    return map;
@@ -74,23 +72,23 @@ public class CSVLoader extends Loader {
 	
 	private class CSVReaderIterator implements Iterator<InputRow> {
 		String nextLine;
-		protected BufferedReader breader;
+		protected BufferedReader bufferedReader;
 	    	
 	    public CSVReaderIterator() {
-	      this.breader = new BufferedReader(reader);
+	      this.bufferedReader = new BufferedReader(reader);
 	    }
 
 	    protected Long getTimestamp(Map<String, Object> map) {
 	    	if (timestampDimension == null) {
-	    		return 1l;
+	    		return 1L;
 	    	} else {
-	    		return (Long) Long.valueOf((String)map.get(timestampDimension));
+	    		return Long.valueOf((String)map.get(timestampDimension));
 	    	}
 	    }
 
 	    public boolean hasNext() {
 	    	try {
-	    		if (nextLine == null && (nextLine = breader.readLine()) == null) {
+	    		if (nextLine == null && (nextLine = bufferedReader.readLine()) == null) {
 	    			close();
 	    			return false;
 	    		} else {
@@ -106,7 +104,7 @@ public class CSVLoader extends Loader {
 	    public InputRow next() {
 	    	if (nextLine == null) {
 	    		try {
-	    			nextLine = breader.readLine();
+	    			nextLine = bufferedReader.readLine();
 	    		} catch (IOException e) {
 	    			e.printStackTrace();
 	    			close();
@@ -129,8 +127,8 @@ public class CSVLoader extends Loader {
 	    
 	    public void close() {
 	    	try {
-	    		breader.close();
-	    	} catch(Exception e) {
+	    		bufferedReader.close();
+	    	} catch(IOException e) {
 	    	}
 	    }
 	}
