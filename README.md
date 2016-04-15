@@ -29,12 +29,12 @@
 
 ####As a Maven dependency
 
-When **druidlet** becomes available on Maven Central or JCenter, the dependency to add would be:
+**druidlet** is on Bintray and Maven Central:
 
     <dependency>
         <groupId>com.inferlytics</groupId>
         <artifactId>druidlet</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1</version>
     </dependency>
 
 ####As a JAR
