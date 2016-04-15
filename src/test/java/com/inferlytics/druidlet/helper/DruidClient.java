@@ -12,7 +12,6 @@ package com.inferlytics.druidlet.helper;/*
  * file 'LICENSE', which is part of this source code package.
  */
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.inferlytics.druidlet.util.Utils;
 import io.druid.data.input.Row;
 import io.druid.query.Query;
