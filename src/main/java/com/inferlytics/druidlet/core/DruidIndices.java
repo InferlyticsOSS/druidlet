@@ -52,9 +52,10 @@ public class DruidIndices {
      * @param indexKey    Key to store the index under
      * @param loader      Iterable&lt;InputRow&gt; object to read data rows from
      * @param indexSchema Schema of the index
+     * @return QueryableIndex that was cached
      * @throws IOException
      */
-    public void cache(String indexKey, Iterable<InputRow> loader, IncrementalIndexSchema indexSchema)
+    public QueryableIndex cache(String indexKey, Iterable<InputRow> loader, IncrementalIndexSchema indexSchema)
             throws IOException {
         IncrementalIndex<?> incIndex = new OnheapIncrementalIndex(indexSchema, true, Integer.MAX_VALUE);
 
@@ -74,6 +75,7 @@ public class DruidIndices {
         });
         new IndexMerger(new DefaultObjectMapper(), indexIO).persist(incIndex, tmpIndexDir, new IndexSpec());
         this.indexMap.put(indexKey, indexIO.loadIndex(tmpIndexDir));
+        return this.indexMap.get(indexKey);
     }
 
     /**
