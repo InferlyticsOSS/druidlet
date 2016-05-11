@@ -13,8 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.druid.jackson.DefaultObjectMapper;
 import io.druid.query.Query;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 /**
  * Utility methods and objects
@@ -53,5 +57,24 @@ public class Utils {
     public static Query getQuery(String queryJson) throws JsonParseException,
             JsonMappingException, IOException {
         return JSON_MAPPER.readValue(queryJson, Query.class);
+    }
+
+    /**
+     * Helper method to read a file into a ByteBuffer
+     *
+     * @param inFile File to read from
+     * @return ByteBuffer containing the contents of the file
+     * @throws IOException Thrown if there was a problem reading the file
+     */
+    public static ByteBuffer readFile(File inFile) throws IOException {
+        ByteBuffer mBuf;
+        try (FileInputStream fIn = new FileInputStream(inFile);
+             FileChannel fChan = fIn.getChannel()) {
+            long fSize = fChan.size();
+            mBuf = ByteBuffer.allocate((int) fSize);
+            fChan.read(mBuf);
+            mBuf.rewind();
+        }
+        return mBuf;
     }
 }

@@ -29,8 +29,8 @@ import java.util.Random;
 /**
  * Tests querying the server
  */
-public class DruidResourceTest {
-    private static final Logger LOG = LoggerFactory.getLogger(DruidResourceTest.class);
+public class QueryResourceTest {
+    private static final Logger LOG = LoggerFactory.getLogger(QueryResourceTest.class);
     private static final int PORT;
     private static final DruidRunner druidRunner;
     private static final DruidClient client;
