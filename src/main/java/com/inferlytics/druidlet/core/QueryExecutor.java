@@ -177,7 +177,7 @@ public class QueryExecutor {
     }
 
     /**
-     * Parses a query JSON and executes it on the given index
+     * Executes a Query by identifying the appropriate QueryRunner
      *
      * @param query Query to execute
      * @param index Index to execute query on

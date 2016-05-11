@@ -7,6 +7,8 @@
 
 package com.inferlytics.druidlet.core;
 
+import com.inferlytics.druidlet.core.compatibility.druid.SlowIndexMerger;
+import com.inferlytics.druidlet.util.OSCheck;
 import io.druid.data.input.InputRow;
 import io.druid.jackson.DefaultObjectMapper;
 import io.druid.segment.IndexIO;
@@ -49,12 +51,13 @@ public class DruidIndices {
     /**
      * Builds and caches a QueryableIndex from an Iterable by building, persisting and reloading an IncrementalIndex
      *
-     * @param indexKey    Key to store the index under
+     * @param dataSource  Key to store the index under
      * @param loader      Iterable&lt;InputRow&gt; object to read data rows from
      * @param indexSchema Schema of the index
+     * @return QueryableIndex that was cached
      * @throws IOException
      */
-    public void cache(String indexKey, Iterable<InputRow> loader, IncrementalIndexSchema indexSchema)
+    public QueryableIndex cache(String dataSource, Iterable<InputRow> loader, IncrementalIndexSchema indexSchema)
             throws IOException {
         IncrementalIndex<?> incIndex = new OnheapIncrementalIndex(indexSchema, true, Integer.MAX_VALUE);
 
@@ -72,18 +75,23 @@ public class DruidIndices {
                 return 0;
             }
         });
-        new IndexMerger(new DefaultObjectMapper(), indexIO).persist(incIndex, tmpIndexDir, new IndexSpec());
-        this.indexMap.put(indexKey, indexIO.loadIndex(tmpIndexDir));
+        if (OSCheck.isWindows()) {
+            new SlowIndexMerger(new DefaultObjectMapper(), indexIO).persist(incIndex, tmpIndexDir, new IndexSpec());
+        } else {
+            new IndexMerger(new DefaultObjectMapper(), indexIO).persist(incIndex, tmpIndexDir, new IndexSpec());
+        }
+        this.indexMap.put(dataSource, indexIO.loadIndex(tmpIndexDir));
+        return this.indexMap.get(dataSource);
     }
 
     /**
      * Returns a cached index
      *
-     * @param indexKey Key of the index
-     * @return QueryableIndex held under this indexKey
+     * @param dataSource Key of the index
+     * @return QueryableIndex held under this dataSource
      */
-    public QueryableIndex get(String indexKey) {
-        return this.indexMap.get(indexKey);
+    public QueryableIndex get(String dataSource) {
+        return this.indexMap.get(dataSource);
     }
 
     /**

@@ -8,17 +8,15 @@
 package com.inferlytics.druidlet.resource;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.inferlytics.druidlet.service.DruidService;
+import com.inferlytics.druidlet.service.QueryService;
 import com.inferlytics.druidlet.util.Utils;
 import io.swagger.annotations.Api;
 import org.apache.log4j.Logger;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -29,9 +27,9 @@ import javax.ws.rs.core.Response;
  * @since 4/14/2016
  */
 @Path("/v2")
-@Api("Druid API")
-public class DruidResource {
-    private static final Logger LOG = Logger.getLogger(DruidResource.class);
+@Api("Druid Query API")
+public class QueryResource {
+    private static final Logger LOG = Logger.getLogger(QueryResource.class);
 
     /**
      * Used as a response in case of failure
@@ -51,10 +49,9 @@ public class DruidResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response query(@Context HttpServletRequest req, String queryJson) {
+    public Response query(String queryJson) {
         try {
-            String indexKey = String.valueOf(req.getServerPort());
-            return Response.ok(Utils.JSON_MAPPER.writeValueAsString(DruidService.handleQuery(indexKey, queryJson))).build();
+            return Response.ok(Utils.JSON_MAPPER.writeValueAsString(QueryService.handleQuery(queryJson))).build();
         } catch (JsonMappingException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(new FailureResponse(e.getMessage())).build();
         } catch (Exception e) {

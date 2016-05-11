@@ -8,8 +8,13 @@
 package com.inferlytics.druidlet.app;
 
 import com.inferlytics.druidlet.core.DruidIndices;
-import com.inferlytics.druidlet.resource.DruidResource;
+import com.inferlytics.druidlet.loader.Loader;
+import com.inferlytics.druidlet.resource.QueryResource;
+import io.druid.data.input.impl.DimensionsSpec;
+import io.druid.granularity.QueryGranularity;
+import io.druid.query.aggregation.*;
 import io.druid.segment.QueryableIndex;
+import io.druid.segment.incremental.IncrementalIndexSchema;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import org.eclipse.jetty.server.Server;
@@ -23,7 +28,14 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import javax.servlet.DispatcherType;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 
 /**
  * Can be used to start a standalone instance of Druid or start an embedded instance and query it via REST
@@ -78,7 +90,7 @@ public class DruidRunner {
         // This configures Swagger
         BeanConfig beanConfig = new BeanConfig();
         beanConfig.setVersion("1.0.0");
-        beanConfig.setResourcePackage(DruidResource.class.getPackage().getName());
+        beanConfig.setResourcePackage(QueryResource.class.getPackage().getName());
         beanConfig.setBasePath(basePath);
         beanConfig.setDescription("Embedded Druid");
         beanConfig.setTitle("Embedded Druid");
@@ -93,7 +105,7 @@ public class DruidRunner {
      */
     private static ContextHandler buildContext(String basePath) {
         ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.packages(DruidResource.class.getPackage().getName(), ApiListingResource.class.getPackage().getName());
+        resourceConfig.packages(QueryResource.class.getPackage().getName(), ApiListingResource.class.getPackage().getName());
         ServletContainer servletContainer = new ServletContainer(resourceConfig);
         ServletHolder entityBrowser = new ServletHolder(servletContainer);
         ServletContextHandler entityBrowserContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -139,7 +151,27 @@ public class DruidRunner {
      */
     public static void main(String[] args) throws Exception {
         // TODO Accept command line parameters to start up Druid
-        new DruidRunner(37843, null).run();
+        new DruidRunner(37843, getIndex("test")).run();
     }
 
+    public static QueryableIndex getIndex(String dataSource) throws IOException {
+        //  Create druid segments from raw data
+        Reader reader = new FileReader(new File("./src/test/resources/report.csv"));
+
+        List<String> columns = Arrays.asList("colo", "pool", "report", "URL", "TS", "metric", "value", "count", "min", "max", "sum");
+        List<String> metrics = Arrays.asList("value", "count", "min", "max", "sum");
+        List<String> dimensions = new ArrayList<>(columns);
+        dimensions.removeAll(metrics);
+        Loader loader = Loader.csv(reader, columns, dimensions, "TS");
+
+        DimensionsSpec dimensionsSpec = new DimensionsSpec(dimensions, null, null);
+        AggregatorFactory[] metricsAgg = new AggregatorFactory[]{
+                new LongSumAggregatorFactory("agg_count", "count"),
+                new DoubleMaxAggregatorFactory("agg_max", "max"),
+                new DoubleMinAggregatorFactory("agg_min", "min"),
+                new DoubleSumAggregatorFactory("agg_sum", "sum")
+        };
+        IncrementalIndexSchema indexSchema = new IncrementalIndexSchema(0, QueryGranularity.ALL, dimensionsSpec, metricsAgg);
+        return DruidIndices.getInstance().cache(dataSource, loader, indexSchema);
+    }
 }
