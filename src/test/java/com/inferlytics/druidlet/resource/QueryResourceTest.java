@@ -29,8 +29,8 @@ import java.util.Random;
 /**
  * Tests querying the server
  */
-public class DruidResourceTest {
-    private static final Logger LOG = LoggerFactory.getLogger(DruidResourceTest.class);
+public class QueryResourceTest {
+    private static final Logger LOG = LoggerFactory.getLogger(QueryResourceTest.class);
     private static final int PORT;
     private static final DruidRunner druidRunner;
     private static final DruidClient client;
@@ -39,7 +39,8 @@ public class DruidResourceTest {
         PORT = 2000 + new Random().nextInt(60000);
         client = new DruidClient("http://localhost:" + PORT + "/druid/");
         try {
-            druidRunner = new DruidRunner(PORT, IndexCreationHelper.getIndex(String.valueOf(PORT)));
+            IndexCreationHelper.createIndex(String.valueOf("test"));
+            druidRunner = new DruidRunner(PORT);
         } catch (IOException e) {
             throw new IllegalStateException("Could not create index", e);
         }

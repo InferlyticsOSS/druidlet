@@ -26,7 +26,7 @@ public class EmbeddedDruidTest {
 
     @Test
     public void groupByQuery() throws IOException {
-        QueryableIndex index = IndexCreationHelper.getIndex("groupByTest");
+        QueryableIndex index = IndexCreationHelper.createIndex("groupByTest");
         Query query = QueryCreationHelper.getGroupByQuery();
 
         @SuppressWarnings("unchecked")
@@ -58,7 +58,7 @@ public class EmbeddedDruidTest {
 
     @Test
     public void topNQuery() throws IOException {
-        QueryableIndex index = IndexCreationHelper.getIndex("topNTest");
+        QueryableIndex index = IndexCreationHelper.createIndex("topNTest");
         Query query = QueryCreationHelper.getTopNQuery();
         @SuppressWarnings("unchecked")
         Sequence<Result> sequence = QueryExecutor.run(query, index);
