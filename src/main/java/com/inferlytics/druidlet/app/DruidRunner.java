@@ -45,18 +45,15 @@ import java.util.List;
  */
 public class DruidRunner {
     private Server server;
-    private QueryableIndex index;
     private int port;
 
     /**
      * Create a new DruidRunner to start and stop an embedded Druid instance
      *
-     * @param port  Port to listen on
-     * @param index Index to make available
+     * @param port Port to listen on
      */
-    public DruidRunner(int port, QueryableIndex index) {
+    public DruidRunner(int port) {
         this.port = port;
-        this.index = index;
     }
 
     /**
@@ -74,7 +71,6 @@ public class DruidRunner {
             handlers.addHandler(buildContext(basePath));
             server.setHandler(handlers);
             server.start();
-            DruidIndices.getInstance().cache(String.valueOf(port), index);
         } else {
             throw new IllegalStateException("Server already running");
         }
@@ -151,10 +147,11 @@ public class DruidRunner {
      */
     public static void main(String[] args) throws Exception {
         // TODO Accept command line parameters to start up Druid
-        new DruidRunner(37843, getIndex("test")).run();
+        createIndex("test");
+        new DruidRunner(37843).run();
     }
 
-    public static QueryableIndex getIndex(String dataSource) throws IOException {
+    public static QueryableIndex createIndex(String dataSource) throws IOException {
         //  Create druid segments from raw data
         Reader reader = new FileReader(new File("./src/test/resources/report.csv"));
 

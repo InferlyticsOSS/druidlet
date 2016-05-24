@@ -30,7 +30,7 @@ import java.util.List;
 public class IndexCreationHelper {
     private static final DruidIndices indices = DruidIndices.getInstance();
 
-    public static QueryableIndex getIndex(String indexKey) throws IOException {
+    public static QueryableIndex createIndex(String indexKey) throws IOException {
         if (indices.has(indexKey)) {
             return indices.get(indexKey);
         }
